@@ -2,27 +2,20 @@ import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
   isMainModule,
-  writeResponseToNodeResponse,
+  writeResponseToNodeResponse
 } from '@angular/ssr/node';
+import {expressHandler} from '@genkit-ai/express';
 import express from 'express';
-import { join } from 'node:path';
+import {join} from 'node:path';
+import {flow} from './genkit/flow';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+app.post('/api/principal',express.json(), expressHandler(flow));
+
 
 /**
  * Serve static files from /browser

@@ -1,0 +1,16 @@
+<div class="neo-input-wrapper" [class.neo-input--focused]="isFocused">
+  <div class="neo-input__glow"></div>
+  <input
+    #inputRef
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [(ngModel)]="value"
+    (focus)="isFocused = true"
+    (blur)="isFocused = false"
+    (keyup.enter)="onEnter.emit()"
+    class="neo-input"
+  />
+  <div class="neo-input__border"></div>
+</div>
+

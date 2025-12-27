@@ -1,0 +1,11 @@
+<button 
+  [type]="type()"
+  [disabled]="disabled()"
+  [class]="buttonClasses()"
+  (click)="handleClick()">
+  <span class="neo-button__content">
+    <ng-content />
+  </span>
+  <span class="neo-button__glow"></span>
+</button>
+

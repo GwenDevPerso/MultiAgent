@@ -1,0 +1,81 @@
+<div class="chat-container">
+  <!-- Header -->
+  <header class="chat-header">
+    <div class="chat-header__logo">
+      <div class="chat-header__icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+      </div>
+      <div class="chat-header__text">
+        <h1>Neo AI</h1>
+        <span class="chat-header__status">
+          <span class="status-dot"></span>
+          En ligne
+        </span>
+      </div>
+    </div>
+    @if (chatService.hasMessages()) {
+      <button class="clear-btn" (click)="chatService.clearMessages()">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+      </button>
+    }
+  </header>
+
+  <!-- Messages area -->
+  <main class="chat-messages" #messagesContainer>
+    @if (!chatService.hasMessages()) {
+      <div class="chat-welcome">
+        <div class="chat-welcome__icon">🍽️</div>
+        <h2>Bienvenue sur Neo AI</h2>
+        <p>Votre assistant du futur. Décrivez vos envies et je créerai ce que vous voulez.</p>
+        <div class="chat-welcome__suggestions">
+          <button class="suggestion-chip" (click)="sendSuggestion('météo en france')">
+            🌏 Météo
+          </button>
+          <button class="suggestion-chip" (click)="sendSuggestion('crypto en tendance')">
+            💰 Crypto
+          </button>
+          <button class="suggestion-chip" (click)="sendSuggestion('financement d\'entreprise')">
+            💰 Finances
+          </button>
+        </div>
+      </div>
+    } @else {
+      @for (message of chatService.messages(); track message.id) {
+        <app-chat-message [message]="message" />
+      }
+    }
+  </main>
+
+  <!-- Input area -->
+  <footer class="chat-input">
+    <div class="chat-input__wrapper">
+      <app-neo-input
+        [(value)]="inputValue"
+        [disabled]="chatService.isLoading()"
+        placeholder="Décrivez vos envies ..."
+        (onEnter)="sendMessage()"
+      />
+      <app-neo-button
+        [disabled]="chatService.isLoading() || !inputValue().trim()"
+        (clicked)="sendMessage()">
+        @if (chatService.isLoading()) {
+          <span class="loading-spinner"></span>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        }
+      </app-neo-button>
+    </div>
+  </footer>
+
+  <!-- Background effects -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow--1"></div>
+  <div class="bg-glow bg-glow--2"></div>
+</div>
+

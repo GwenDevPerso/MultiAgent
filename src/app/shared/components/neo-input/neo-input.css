@@ -1,0 +1,85 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.neo-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.neo-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-family: 'Rajdhani', 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e0e0e0;
+  background: rgba(10, 22, 40, 0.8);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 0.75rem;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 400;
+}
+
+.neo-input:focus {
+  border-color: rgba(0, 245, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.1), 0 0 30px rgba(0, 245, 255, 0.2);
+}
+
+.neo-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.neo-input__glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 245, 255, 0) 0%,
+    rgba(0, 245, 255, 0.4) 50%,
+    rgba(0, 245, 255, 0) 100%
+  );
+  border-radius: 0.875rem;
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.neo-input--focused .neo-input__glow {
+  opacity: 1;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.neo-input__border {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00f5ff, #ff00ff);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.neo-input--focused .neo-input__border {
+  width: 100%;
+}
