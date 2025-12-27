@@ -31,7 +31,7 @@
         <div class="chat-welcome__icon">🍽️</div>
         <h2>Bienvenue sur Neo AI</h2>
         <p>Votre assistant du futur. Décrivez vos envies et je créerai ce que vous voulez.</p>
-        <div class="chat-welcome__suggestions">
+        <!-- <div class="chat-welcome__suggestions">
           <button class="suggestion-chip" (click)="sendSuggestion('météo en france')">
             🌏 Météo
           </button>
@@ -41,7 +41,7 @@
           <button class="suggestion-chip" (click)="sendSuggestion('financement d\'entreprise')">
             💰 Finances
           </button>
-        </div>
+        </div> -->
       </div>
     } @else {
       @for (message of chatService.messages(); track message.id) {

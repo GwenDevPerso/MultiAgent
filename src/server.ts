@@ -5,16 +5,17 @@ import {
   writeResponseToNodeResponse
 } from '@angular/ssr/node';
 import {expressHandler} from '@genkit-ai/express';
+import 'dotenv/config';
 import express from 'express';
 import {join} from 'node:path';
-import {flow} from './genkit/flow';
+import {chatbotFlow} from './genkit/flow';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-app.post('/api/principal',express.json(), expressHandler(flow));
+app.post('/api/principal',express.json(), expressHandler(chatbotFlow));
 
 
 /**

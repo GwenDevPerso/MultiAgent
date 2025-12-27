@@ -1,3 +1,4 @@
+import {openAI} from '@genkit-ai/compat-oai/openai';
 import {z} from 'zod';
 import {ai} from './genkit';
 
@@ -45,7 +46,7 @@ const weatherCodeToCondition = (code: number): string => {
   return conditions[code] ?? 'inconnu';
 };
 
-export const getWeatherTool = ai.defineTool(
+const getWeatherTool = ai.defineTool(
   {
     name: 'getWeather',
     description: 'Get current weather for a city including temperature and conditions',
@@ -61,7 +62,9 @@ export const getWeatherTool = ai.defineTool(
   async ({ city }) => {
     console.log('city', city);
     const geoResponse = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=fr`
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+        city
+      )}&count=1&language=fr`
     );
     const geoData: GeocodingResult = await geoResponse.json();
 
@@ -88,3 +91,19 @@ export const getWeatherTool = ai.defineTool(
     };
   }
 );
+
+export const weatherAgent = ai.definePrompt({
+  name: 'weatherAgent',
+  model: openAI.model('gpt-4o-mini'),
+  description: 'AI agent answering questions about the weather.',
+  input: {
+    schema: z.object({
+      query: z.string().describe('The weather question to answer'),
+    }),
+  },
+  tools: [getWeatherTool],
+  system: `You are an AI agent answering questions about the weather.
+      You can use the tool getWeather to get the weather conditions of a city.
+      You answer in English.
+    `,
+});
