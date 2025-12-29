@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, 
 import {ChatService} from '../../../../core/services/chat.service';
 import {NeoButton} from '../../../../shared/components/neo-button/neo-button';
 import {NeoInput} from '../../../../shared/components/neo-input/neo-input';
+import {WalletConnectComponent} from '../../../../shared/components/wallet-connect/wallet-connect';
 import {ChatMessageComponent} from '../chat-message/chat-message';
 
 /**
@@ -9,7 +10,7 @@ import {ChatMessageComponent} from '../chat-message/chat-message';
  */
 @Component({
   selector: 'app-chat-container',
-  imports: [ChatMessageComponent, NeoInput, NeoButton],
+  imports: [ChatMessageComponent, NeoInput, NeoButton, WalletConnectComponent],
   templateUrl: './chat-container.html',
   styleUrl: './chat-container.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

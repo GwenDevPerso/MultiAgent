@@ -1,0 +1,30 @@
+<div class="wallet-connect">
+  @if (!phantomService.isConnected()) {
+    <button 
+      class="connect-btn"
+      [disabled]="phantomService.isConnecting()"
+      (click)="connect()">
+      @if (phantomService.isConnecting()) {
+        <span class="spinner"></span>
+        Connecting...
+      } @else {
+        <span class="phantom-icon">👻</span>
+        Connect Phantom
+      }
+    </button>
+  } @else {
+    <div class="wallet-info">
+      <span class="address">
+        {{ truncateAddress(phantomService.solanaAddress()) }}
+      </span>
+      <button class="disconnect-btn" (click)="disconnect()">
+        Disconnect
+      </button>
+    </div>
+  }
+  
+  @if (phantomService.error()) {
+    <p class="error">{{ phantomService.error() }}</p>
+  }
+</div>
+
