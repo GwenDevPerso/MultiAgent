@@ -2,7 +2,8 @@
   class="message"
   [class.message--user]="isUser()"
   [class.message--assistant]="!isUser()"
-  [class.message--streaming]="message().isStreaming">
+  [class.message--streaming]="message().isStreaming"
+  [class.message--transaction]="hasTransaction()">
   
   <!-- Avatar -->
   <div class="message__avatar">
@@ -26,6 +27,45 @@
     <div class="message__content" [innerHTML]="formattedContent()"></div>
     @if (message().isStreaming) {
       <span class="message__cursor">▋</span>
+    }
+
+    <!-- Boutons de confirmation de transaction -->
+    @if (hasTransaction() && isPending()) {
+      <div class="transaction-actions">
+        @if (!phantomService.isConnected()) {
+          <p class="transaction-warning">⚠️ Connectez votre wallet Phantom pour confirmer</p>
+        }
+        <div class="transaction-buttons">
+          <button 
+            class="transaction-btn transaction-btn--confirm"
+            [disabled]="!phantomService.isConnected()"
+            (click)="confirmTransaction()">
+            ✓ Confirmer
+          </button>
+          <button 
+            class="transaction-btn transaction-btn--reject"
+            (click)="rejectTransaction()">
+            ✕ Annuler
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Status de transaction -->
+    @if (isExecuted()) {
+      <div class="transaction-status transaction-status--success">
+        ✅ Transaction exécutée
+      </div>
+    }
+    @if (isFailed()) {
+      <div class="transaction-status transaction-status--error">
+        ❌ Transaction échouée
+      </div>
+    }
+    @if (isRejected()) {
+      <div class="transaction-status transaction-status--rejected">
+        🚫 Transaction annulée
+      </div>
     }
   </div>
 

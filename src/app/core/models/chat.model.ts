@@ -1,4 +1,24 @@
 /**
+ * Action de transaction crypto
+ */
+export const ACTION = 'SEND_TRANSACTION';
+
+/**
+ * Action de transaction crypto demandée par l'agent
+ */
+export interface TransactionAction {
+  action: typeof ACTION;
+  amount: number;
+  to: string;
+  crypto: string;
+}
+
+/**
+ * État d'une action en attente de confirmation
+ */
+export type ActionStatus = 'pending' | 'confirmed' | 'rejected' | 'executed' | 'failed';
+
+/**
  * Représente un message dans le chat
  */
 export interface ChatMessage {
@@ -7,6 +27,10 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   timestamp: Date;
   isStreaming?: boolean;
+  /** Action de transaction en attente de confirmation */
+  transactionAction?: TransactionAction;
+  /** Statut de l'action si présente */
+  actionStatus?: ActionStatus;
 }
 
 /**

@@ -1,10 +1,13 @@
-import {computed, Injectable, signal} from '@angular/core';
+import {computed, inject, Injectable, signal} from '@angular/core';
 import {streamFlow} from 'genkit/beta/client';
-import {ChatMessage} from '../models/chat.model';
+import {ACTION, ActionStatus, ChatMessage, TransactionAction} from '../models/chat.model';
+import {PhantomService} from './phantom.service';
 
 interface ChatOutput {
   response: string;
 }
+
+const ACTION_JSON_REGEX = /\{[\s\S]*"action"\s*:\s*"(SEND_TRANSACTION)"[\s\S]*\}/;
 
 /**
  * Service de gestion du chat IA
@@ -16,12 +19,17 @@ interface ChatOutput {
 })
 export class ChatService {
   private readonly API_URL = '/api/principal';
+  private readonly phantomService = inject(PhantomService);
   
   // État privé
   private readonly _messages = signal<ChatMessage[]>([]);
   private readonly _isLoading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _currentStreamText = signal('');
+  private readonly _pendingTransaction = signal<{messageId: string; action: TransactionAction} | null>(null);
+
+  // Signal pour les transactions en attente
+  readonly pendingTransaction = this._pendingTransaction.asReadonly();
 
   // Sélecteurs publics (lecture seule)
   readonly messages = this._messages.asReadonly();
@@ -100,14 +108,33 @@ export class ChatService {
 
       // Finaliser avec la réponse complète
       const finalOutput = await result.output as ChatOutput;
+      
+      // Détecter si la réponse contient une action de transaction
+      const transactionAction = this.extractTransactionAction(finalOutput.response);
 
       this._messages.update(msgs => 
         msgs.map(msg => 
           msg.id === assistantMessage.id 
-            ? { ...msg, content: finalOutput.response, isStreaming: false }
+            ? { 
+                ...msg, 
+                content: transactionAction 
+                  ? this.formatTransactionMessage(transactionAction)
+                  : finalOutput.response, 
+                isStreaming: false,
+                transactionAction,
+                actionStatus: transactionAction ? 'pending' : undefined
+              }
             : msg
         )
       );
+
+      // Stocker la transaction en attente
+      if (transactionAction) {
+        this._pendingTransaction.set({
+          messageId: assistantMessage.id,
+          action: transactionAction
+        });
+      }
 
     } catch (err) {
       this._error.set('Une erreur est survenue. Veuillez réessayer.');
@@ -127,6 +154,113 @@ export class ChatService {
   clearMessages(): void {
     this._messages.set([]);
     this._error.set(null);
+    this._pendingTransaction.set(null);
+  }
+
+  /**
+   * Extrait une action de transaction du contenu de la réponse
+   */
+  private extractTransactionAction(content: string): TransactionAction | undefined {
+    const match = content.match(ACTION_JSON_REGEX);
+    if (!match) return undefined;
+    try {
+      const parsed = JSON.parse(match[0]);
+      if (parsed.action === ACTION && parsed.amount && parsed.to && parsed.crypto) {
+        return {
+          action: parsed.action,
+          amount: parsed.amount,
+          to: parsed.to,
+          crypto: parsed.crypto
+        };
+      }
+    } catch {
+      console.error('Invalid JSON:', content);
+    }
+    return undefined;
+  }
+
+  /**
+   * Formate un message lisible pour une transaction
+   */
+  private formatTransactionMessage(action: TransactionAction): string {
+    return `Je vais envoyer **${action.amount} ${action.crypto.toUpperCase()}** à l'adresse **${action.to}**. Veuillez confirmer cette transaction.`;
+  }
+
+  /**
+   * Met à jour le statut d'une action dans un message
+   */
+  private updateMessageActionStatus(messageId: string, status: ActionStatus): void {
+    this._messages.update(msgs =>
+      msgs.map(msg =>
+        msg.id === messageId
+          ? { ...msg, actionStatus: status }
+          : msg
+      )
+    );
+  }
+
+  /**
+   * Confirme et exécute une transaction en attente
+   */
+  async confirmTransaction(messageId: string): Promise<void> {
+    const pending = this._pendingTransaction();
+    if (!pending || pending.messageId !== messageId) {
+      throw new Error('No pending transaction found');
+    }
+
+    if (!this.phantomService.isConnected()) {
+      this._error.set('Veuillez connecter votre wallet Phantom avant de confirmer.');
+      return;
+    }
+
+    this.updateMessageActionStatus(messageId, 'confirmed');
+
+    try {
+      // TODO: Construire la vraie transaction Solana avec les paramètres
+      // Pour l'instant, on simule avec signMessage
+      await this.phantomService.signMessage(
+        `Confirm transaction: Send ${pending.action.amount} ${pending.action.crypto} to ${pending.action.to}`
+      );
+
+      this.updateMessageActionStatus(messageId, 'executed');
+      this._pendingTransaction.set(null);
+
+      // Ajouter un message de confirmation
+      const confirmMessage: ChatMessage = {
+        id: this.generateId(),
+        content: `✅ Transaction confirmée ! ${pending.action.amount} ${pending.action.crypto.toUpperCase()} envoyé à ${pending.action.to}`,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      this._messages.update(msgs => [...msgs, confirmMessage]);
+
+    } catch (error) {
+      this.updateMessageActionStatus(messageId, 'failed');
+      const errorMsg = error instanceof Error ? error.message : 'Transaction failed';
+      this._error.set(errorMsg);
+    }
+  }
+
+  /**
+   * Rejette une transaction en attente
+   */
+  rejectTransaction(messageId: string): void {
+    const pending = this._pendingTransaction();
+    if (!pending || pending.messageId !== messageId) {
+      return;
+    }
+
+    this.updateMessageActionStatus(messageId, 'rejected');
+    this._pendingTransaction.set(null);
+
+    // Ajouter un message de rejet
+    const rejectMessage: ChatMessage = {
+      id: this.generateId(),
+      content: '❌ Transaction annulée.',
+      role: 'assistant',
+      timestamp: new Date()
+    };
+    this._messages.update(msgs => [...msgs, rejectMessage]);
   }
 }
 

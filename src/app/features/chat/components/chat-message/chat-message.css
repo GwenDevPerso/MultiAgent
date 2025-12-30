@@ -61,8 +61,13 @@
 }
 
 @keyframes aiPulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); }
-  50% { box-shadow: 0 0 25px rgba(255, 0, 255, 0.4); }
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 0, 255, 0.4);
+  }
 }
 
 /* Bubble */
@@ -115,8 +120,14 @@
 }
 
 @keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Time */
@@ -131,3 +142,89 @@
   text-align: right;
 }
 
+/* Transaction styles */
+.message--transaction .message__bubble {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.15) 0%, rgba(255, 100, 0, 0.1) 100%);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+}
+
+.transaction-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-warning {
+  font-size: 0.85rem;
+  color: #ffa500;
+  margin: 0 0 0.75rem 0;
+}
+
+.transaction-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.transaction-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.transaction-btn--confirm {
+  background: linear-gradient(135deg, #00c853 0%, #00a844 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 200, 83, 0.3);
+}
+
+.transaction-btn--confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 200, 83, 0.4);
+}
+
+.transaction-btn--confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.transaction-btn--reject {
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+}
+
+.transaction-btn--reject:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
+}
+
+/* Transaction status */
+.transaction-status {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.transaction-status--success {
+  background: rgba(0, 200, 83, 0.15);
+  color: #00c853;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+}
+
+.transaction-status--error {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.transaction-status--rejected {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
