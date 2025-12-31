@@ -39,17 +39,20 @@
         <div class="chat-welcome__icon">🍽️</div>
         <h2>Bienvenue sur Neo AI</h2>
         <p>Votre assistant du futur. Décrivez vos envies et je créerai ce que vous voulez.</p>
-        <!-- <div class="chat-welcome__suggestions">
-          <button class="suggestion-chip" (click)="sendSuggestion('météo en france')">
-            🌏 Météo
+        <div class="chat-welcome__suggestions">
+          <button class="suggestion-chip" (click)="sendSuggestion('I want to execute a tansaction of 0.01 SOL to ...')">
+            💰  I want to execute a tansaction of 0.01 SOL to ...
           </button>
-          <button class="suggestion-chip" (click)="sendSuggestion('crypto en tendance')">
-            💰 Crypto
+          <button class="suggestion-chip" (click)="sendSuggestion('I need help to do a crypto transaction')">
+            💡 I need help to do a crypto transaction
           </button>
-          <button class="suggestion-chip" (click)="sendSuggestion('financement d\'entreprise')">
-            💰 Finances
+          <button class="suggestion-chip" (click)="sendSuggestion('List me the top 10 cryptos by market cap')">
+            💰 List me the top 10 cryptos by market cap
           </button>
-        </div> -->
+          <button class="suggestion-chip" (click)="sendSuggestion('Weather in France')">
+            🌍 Weather
+          </button>
+        </div>
       </div>
     } @else {
       @for (message of chatService.messages(); track message.id) {

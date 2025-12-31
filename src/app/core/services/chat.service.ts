@@ -11,22 +11,25 @@ const ACTION_JSON_REGEX = /\{[\s\S]*"action"\s*:\s*"(SEND_TRANSACTION)"[\s\S]*\}
 
 /**
  * Service de gestion du chat IA
- * 
+ *
  * Gère l'état des messages et la communication avec l'API Genkit
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ChatService {
   private readonly API_URL = '/api/principal';
   private readonly phantomService = inject(PhantomService);
-  
+
   // État privé
   private readonly _messages = signal<ChatMessage[]>([]);
   private readonly _isLoading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _currentStreamText = signal('');
-  private readonly _pendingTransaction = signal<{messageId: string; action: TransactionAction} | null>(null);
+  private readonly _pendingTransaction = signal<{
+    messageId: string;
+    action: TransactionAction;
+  } | null>(null);
 
   // Signal pour les transactions en attente
   readonly pendingTransaction = this._pendingTransaction.asReadonly();
@@ -36,7 +39,7 @@ export class ChatService {
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
   readonly currentStreamText = this._currentStreamText.asReadonly();
-  
+
   // Computed
   readonly hasMessages = computed(() => this._messages().length > 0);
   readonly lastMessage = computed(() => {
@@ -64,10 +67,10 @@ export class ChatService {
       id: this.generateId(),
       content: content.trim(),
       role: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    this._messages.update(msgs => [...msgs, userMessage]);
+    this._messages.update((msgs) => [...msgs, userMessage]);
     this._error.set(null);
     this._isLoading.set(true);
     this._currentStreamText.set('');
@@ -78,15 +81,15 @@ export class ChatService {
       content: '',
       role: 'assistant',
       timestamp: new Date(),
-      isStreaming: true
+      isStreaming: true,
     };
 
-    this._messages.update(msgs => [...msgs, assistantMessage]);
+    this._messages.update((msgs) => [...msgs, assistantMessage]);
 
     try {
       const result = streamFlow({
         url: this.API_URL,
-        input: { message: content }
+        input: { message: content },
       });
 
       let accumulatedText = '';
@@ -95,34 +98,32 @@ export class ChatService {
       for await (const chunk of result.stream) {
         accumulatedText += chunk;
         this._currentStreamText.set(accumulatedText);
-        
+
         // Mettre à jour le message assistant
-        this._messages.update(msgs => 
-          msgs.map(msg => 
-            msg.id === assistantMessage.id 
-              ? { ...msg, content: accumulatedText }
-              : msg
+        this._messages.update((msgs) =>
+          msgs.map((msg) =>
+            msg.id === assistantMessage.id ? { ...msg, content: accumulatedText } : msg
           )
         );
       }
 
       // Finaliser avec la réponse complète
-      const finalOutput = await result.output as ChatOutput;
-      
+      const finalOutput = (await result.output) as ChatOutput;
+
       // Détecter si la réponse contient une action de transaction
       const transactionAction = this.extractTransactionAction(finalOutput.response);
 
-      this._messages.update(msgs => 
-        msgs.map(msg => 
-          msg.id === assistantMessage.id 
-            ? { 
-                ...msg, 
-                content: transactionAction 
+      this._messages.update((msgs) =>
+        msgs.map((msg) =>
+          msg.id === assistantMessage.id
+            ? {
+                ...msg,
+                content: transactionAction
                   ? this.formatTransactionMessage(transactionAction)
-                  : finalOutput.response, 
+                  : finalOutput.response,
                 isStreaming: false,
                 transactionAction,
-                actionStatus: transactionAction ? 'pending' : undefined
+                actionStatus: transactionAction ? 'pending' : undefined,
               }
             : msg
         )
@@ -132,16 +133,13 @@ export class ChatService {
       if (transactionAction) {
         this._pendingTransaction.set({
           messageId: assistantMessage.id,
-          action: transactionAction
+          action: transactionAction,
         });
       }
-
     } catch (err) {
       this._error.set('Une erreur est survenue. Veuillez réessayer.');
       // Supprimer le message assistant en cas d'erreur
-      this._messages.update(msgs => 
-        msgs.filter(msg => msg.id !== assistantMessage.id)
-      );
+      this._messages.update((msgs) => msgs.filter((msg) => msg.id !== assistantMessage.id));
     } finally {
       this._isLoading.set(false);
       this._currentStreamText.set('');
@@ -170,7 +168,7 @@ export class ChatService {
           action: parsed.action,
           amount: parsed.amount,
           to: parsed.to,
-          crypto: parsed.crypto
+          crypto: parsed.crypto,
         };
       }
     } catch {
@@ -183,22 +181,23 @@ export class ChatService {
    * Formate un message lisible pour une transaction
    */
   private formatTransactionMessage(action: TransactionAction): string {
-    return `Je vais envoyer **${action.amount} ${action.crypto.toUpperCase()}** à l'adresse **${action.to}**. Veuillez confirmer cette transaction.`;
+    return `Je vais envoyer **${action.amount} ${action.crypto.toUpperCase()}** à l'adresse **${
+      action.to
+    }**. Veuillez confirmer cette transaction.`;
   }
 
   /**
    * Met à jour le statut d'une action dans un message
    */
   private updateMessageActionStatus(messageId: string, status: ActionStatus): void {
-    this._messages.update(msgs =>
-      msgs.map(msg =>
-        msg.id === messageId
-          ? { ...msg, actionStatus: status }
-          : msg
-      )
+    this._messages.update((msgs) =>
+      msgs.map((msg) => (msg.id === messageId ? { ...msg, actionStatus: status } : msg))
     );
   }
 
+  /**
+   * Confirme et exécute une transaction en attente
+   */
   /**
    * Confirme et exécute une transaction en attente
    */
@@ -216,24 +215,29 @@ export class ChatService {
     this.updateMessageActionStatus(messageId, 'confirmed');
 
     try {
-      // TODO: Construire la vraie transaction Solana avec les paramètres
-      // Pour l'instant, on simule avec signMessage
-      await this.phantomService.signMessage(
-        `Confirm transaction: Send ${pending.action.amount} ${pending.action.crypto} to ${pending.action.to}`
-      );
+      const { amount, to, crypto } = pending.action;
+      console.log('amount', amount);
+      console.log('to', to);
+      console.log('crypto', crypto);
+      // Vérifier que c'est bien du SOL
+      if (crypto.toLowerCase() !== 'sol') {
+        throw new Error(`Seul SOL est supporté pour le moment. Token "${crypto}" non disponible.`);
+      }
+
+      // Envoyer la transaction via PhantomService
+      const signature = await this.phantomService.sendSol(to, amount);
 
       this.updateMessageActionStatus(messageId, 'executed');
       this._pendingTransaction.set(null);
 
-      // Ajouter un message de confirmation
+      // Ajouter un message de confirmation avec lien Solscan
       const confirmMessage: ChatMessage = {
         id: this.generateId(),
-        content: `✅ Transaction confirmée ! ${pending.action.amount} ${pending.action.crypto.toUpperCase()} envoyé à ${pending.action.to}`,
+        content: `✅ Transaction confirmée !\n\n**${amount} SOL** envoyé à \`${to}\`\n\n🔗 [Voir sur Solscan](https://solscan.io/tx/${signature})`,
         role: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      this._messages.update(msgs => [...msgs, confirmMessage]);
-
+      this._messages.update((msgs) => [...msgs, confirmMessage]);
     } catch (error) {
       this.updateMessageActionStatus(messageId, 'failed');
       const errorMsg = error instanceof Error ? error.message : 'Transaction failed';
@@ -258,9 +262,8 @@ export class ChatService {
       id: this.generateId(),
       content: '❌ Transaction annulée.',
       role: 'assistant',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    this._messages.update(msgs => [...msgs, rejectMessage]);
+    this._messages.update((msgs) => [...msgs, rejectMessage]);
   }
 }
-

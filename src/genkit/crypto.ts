@@ -104,6 +104,36 @@ const parseInputTool = ai.defineTool(
   }
 );
 
+const assistantTransactionExplanationTool = ai.defineTool(
+  {
+    name: 'assistantTransaction',
+    description: 'Assistant for transaction tutorial explanation for the user',
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      message: z.string().describe('The message to send'),
+    }),
+  },
+  async () => {
+    return {
+      message: `Here is a step by step tutorial for a transaction: First, you need to connect your wallet to the platform ex. https://phantom.com/. Then, you need to select the amount of crypto you want to send and the address of the recipient. Finally, you need to click on the send button. The transaction will be confirmed and the crypto will be sent to the recipient. Here is a video tutorial for more details: https://www.youtube.com/watch?v=dQw4w9WgXcQ`,
+    };
+  }
+);
+
+const listCryptoTool = ai.defineTool(
+  {
+    name: 'listCrypto',
+    description: 'List all crypto tools available',
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      tools: z.array(z.string()).describe('The list of crypto tools available'),
+    }),
+  },
+  async () => {
+    return { tools: ['Get Crypto Price', 'Get Top Crypto', 'Transaction Tutorial'] };
+  }
+);
+
 export const cryptoAgent = ai.definePrompt({
   name: 'cryptoAgent',
   model: openAI.model('gpt-4o-mini'),
@@ -118,19 +148,22 @@ export const cryptoAgent = ai.definePrompt({
   TOOL SELECTION RULES:
   1. If user asks about a crypto PRICE → use getDataByCrypto
   2. If user asks about TOP/BEST cryptos or rankings → use getTopCrypto  
-  3. For ANY OTHER request (especially if it contains an address/identifier, amount, or words like send/transfer/envoie) → use parseInput
+  3. If user asks HOW to do a transaction, needs help, tutorial, or explanation about transactions → use assistantTransaction
+  4. If user wants to EXECUTE a transaction with specific data (amount, address, asset like "send 0.5 SOL to...") → use parseInput
+  5. If user asks about available tools → use listCrypto
 
   FOR PARSE INPUT TOOL:
+  - Only use when user provides: amount + recipient address + asset
   - Extract the numeric value, identifier and asset from the user input.
   - The numeric value is the amount of crypto to send.
   - The identifier is the address of the recipient.
   - The asset is the symbol of the crypto to send.
 
   Example:
-  User: "Send 0.5 SOL to 0x1234567890123456789012345678901234567890"
+  User: "Send 0.5 SOL to EmGkBYh7kqyAtDNLSTqRM1xoSS3BfLgSyTWKTAC6ZERT"
   AI: "I've parsed your request. Here's the formatted data:
-    {"action":"SEND_TRANSACTION","amount":0.5,"to":"0x1234567890123456789012345678901234567890","crypto":"SOL"}
+    {"action":"SEND_TRANSACTION","amount":0.5,"to":"EmGkBYh7kqyAtDNLSTqRM1xoSS3BfLgSyTWKTAC6ZERT","crypto":"SOL"}
   "
     `,
-  tools: [getDataByCryptoTool, getTopCryptoTool, parseInputTool],
+  tools: [getDataByCryptoTool, getTopCryptoTool, parseInputTool, assistantTransactionExplanationTool, listCryptoTool],
 });
